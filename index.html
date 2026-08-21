@@ -105,33 +105,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
 .detail .dr.add .v{color:var(--green)}
 .detail .dr.sub .v{color:var(--red)}
 
-/* VIP */
-.vip-bar{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#111827,#1f2937);color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:12px}
-.vip-bar .vt{font-weight:700;color:#fbbf24;flex-shrink:0}
-.vip-bar .vb{padding:5px 12px;border:none;border-radius:14px;background:#fbbf24;color:#111827;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-left:auto}
-.vip-bar .vb:hover{background:#fcd34d}
-.lock-card{background:linear-gradient(135deg,#fafbff,#fff8f3);border:1.5px dashed #c7d2fe;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px}
-.lock-card .lt{font-size:13px;font-weight:700;margin-bottom:4px}
-.lock-card .ld{font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.5}
-.lock-card .lb{display:inline-block;padding:7px 20px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
-.modal.show{display:flex}
-.modal .mc{background:#fff;border-radius:14px;max-width:340px;width:100%;padding:20px 16px;max-height:88vh;overflow-y:auto}
-.modal .mt{font-size:16px;font-weight:800;text-align:center;margin-bottom:4px}
-.modal .ms{font-size:11px;color:var(--text2);text-align:center;margin-bottom:12px}
-.modal .pricebox{display:flex;gap:6px;margin-bottom:12px}
-.modal .tier{flex:1;background:#111827;border-radius:9px;padding:10px;text-align:center}
-.modal .tier.hot{background:linear-gradient(135deg,#111827,#1f2937);border:1.5px solid #fbbf24}
-.modal .tier .old{font-size:10px;color:#6b7280;text-decoration:line-through;display:block}
-.modal .tier .p{font-size:20px;font-weight:800;color:#fbbf24;display:block;margin:2px 0}
-.modal .tier .per{font-size:9.5px;color:#d1d5db}
-.modal .ben{background:var(--bg);border-radius:9px;padding:10px 12px;font-size:11.5px;line-height:1.9;margin-bottom:10px}
-.modal .buy{font-size:11.5px;line-height:1.6;margin-bottom:10px;border:1.5px dashed var(--border);border-radius:9px;padding:9px 11px}
-.modal .inp{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-size:15px;text-align:center;text-transform:uppercase;letter-spacing:1px;font-family:inherit;outline:none;margin-bottom:8px;background:var(--bg)}
-.modal .inp:focus{border-color:var(--green);background:#fff}
-.modal .act{display:block;width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer}
-.modal .cls{display:block;width:100%;padding:9px;background:var(--bg);border:none;border-radius:9px;font-size:12px;color:var(--text2);cursor:pointer;margin-top:8px}
-.modal .err{font-size:11px;color:var(--red);text-align:center;margin-top:6px;display:none}
 
 .note{font-size:10px;color:var(--text2);margin-top:6px;line-height:1.4}
 .footer{text-align:center;padding:14px 8px 6px;font-size:10px;color:var(--text2);line-height:1.6}
@@ -141,12 +114,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
 <body>
 <div class="app">
 
-<!-- VIP bar -->
-<div class="vip-bar">
-  <span class="vt">👑 会员</span>
-  <span id="vipStatus" style="color:#d1d5db">免费版 · 解锁更多功能</span>
-  <button class="vb" onclick="showVip()">升级 ¥29.9</button>
-</div>
 
 <!-- 平台tab -->
 <div class="tabs">
@@ -178,6 +145,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
     <div class="tog warn" id="tg-long" onclick="toggle('long')">🛣️ 长途</div>
     <div class="tog warn" id="tg-rain" onclick="toggle('rain')">🌧️ 雨雪</div>
   </div>
+  <div class="toggles" id="qsRow" style="display:none;margin-top:2px">
+    <div class="tog on" id="qs-zhuan" onclick="setQs(false)">专送 7.6%·保底</div>
+    <div class="tog" id="qs-qs" onclick="setQs(true)">⚡ 神抢手 5.5%·无保底</div>
+  </div>
 </div>
 
 <!-- 福利品 -->
@@ -202,6 +173,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
   <div id="subList"></div>
   <button class="mj-add" onclick="addSub()">+ 加补贴档位</button>
   <div class="note">💡 配送补贴的基数=商品原价+打包-订单优惠。补贴越多，商家实收越少。</div>
+  <div id="sqCard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 5px">
+      <span style="font-size:11px;color:var(--text2);font-weight:600">🎫 神券（神会员券）</span>
+      <label style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="sqOnCb" checked onchange="setSqOn(this.checked)"> 参与</label>
+    </div>
+    <div id="sqList"></div>
+    <button class="mj-add" onclick="addSq()">+ 加档位</button>
+    <div class="note">💡 神券=美团神会员券，按"售价≥X 自动减Y"，商家承担部分优惠。档位以你门店神会员后台实际为准。神抢手模式不触发神券。</div>
+  </div>
 </div>
 
 <!-- 测算结果 -->
@@ -222,37 +202,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
 <div class="footer">
   <div>本工具与美团/淘宝/京东无任何隶属或合作关系</div>
   <div>数据基于公开收费规则测算，实际以平台后台为准</div>
-  <div style="margin-top:6px">外卖定价器 Pro · v3.0 · 真实订单校准版</div>
+  <div style="margin-top:6px">外卖定价器 Pro · v3.2 · 真实订单校准版（含神券/神抢手·免费）</div>
 </div>
 
 </div><!-- /app -->
 
-<!-- VIP 模态 -->
-<div class="modal" id="vipModal">
-  <div class="mc">
-    <div class="mt">👑 升级外卖定价器 Pro 会员</div>
-    <div class="ms">解锁反推定价 / 多档对比 / 推广测算 / 离线使用</div>
-    <div class="pricebox">
-      <div class="tier"><span class="old">¥49.9</span><span class="p">¥29.9</span><span class="per">月度 · 单设备</span></div>
-      <div class="tier hot"><span class="old">¥199</span><span class="p">¥99</span><span class="per">年度 · 三设备（推荐）</span></div>
-    </div>
-    <div class="ben">
-      ✓ 反推最优售价（按目标利润反算）<br>
-      ✓ 多档满减对比表（看哪档利润高）<br>
-      ✓ 推广ROI测算（点金/铂金/袋鼠）<br>
-      ✓ 离线使用（无需联网验证）<br>
-      ✓ 数据云端同步（多设备共享）
-    </div>
-    <div class="buy">
-      购买请联系店主微信 <b>lichang777</b> 索取激活码<br>
-      已购买？直接输入下方激活码：
-    </div>
-    <input class="inp" id="vipCode" placeholder="XXXX-XXXX-XXXX" maxlength="14">
-    <div class="err" id="vipErr">激活码无效或已过期</div>
-    <button class="act" onclick="activateVip()">立即激活</button>
-    <button class="cls" onclick="hideVip()">稍后再说</button>
-  </div>
-</div>
 
 <script>
 // ========== 平台配置（基于9单真实订单反推）==========
@@ -306,6 +260,18 @@ let subList = [
   {full:78, off:4.7}
 ];
 
+// 神券（神会员券，美团专属）：按"售价≥min 自动减off"，取最上级适用档
+let sqOn = true;          // 是否参与神券活动
+let qsMode = false;       // 神抢手模式（美团）：佣金5.5%无保底，禁用打包费与神券
+let sqList = [
+  {min:0, off:5},
+  {min:20, off:7},
+  {min:30, off:9},
+  {min:40, off:10},
+  {min:60, off:12},
+  {min:80, off:14}
+];
+
 // ========== 工具函数 ==========
 const $ = id => document.getElementById(id);
 const fmt = n => (n||0).toFixed(2);
@@ -357,21 +323,28 @@ function calc(){
   const plat = currentPlat;
   const p = PLATFORMS[plat];
   const price = parseFloat($('inPrice').value)||0;     // 商品原价
-  const packing = parseFloat($('inPacking').value)||0; // 打包费
+  const packingRaw = parseFloat($('inPacking').value)||0; // 打包费
   const dist = parseFloat($('inDist').value)||0;       // 距离
   const delivOverride = parseFloat($('inDeliv').value)||0; // 0=自动估算
+
+  // 神抢手模式：平台禁用打包费
+  const packEff = (plat==='mt' && qsMode) ? 0 : packingRaw;
 
   // 福利品
   let giftCost = 0, giftCount = 0;
   for(const g of gifts) if(g.on){ giftCost += g.cost; giftCount++; }
 
+  // 神券（神会员券，美团专属；神抢手或未参与则不触发）
+  const sq = calcSq(price);
+  const shenQuan = sq.off;
+
   // 商品折后总价（含打包）
-  const subTotal = price + packing;
+  const subTotal = price + packEff;
   // 满减
   const manJian = calcMj(mjList, subTotal);
 
-  // 配送费基数 = 原价+打包-满减（用于价格收费分档）
-  const delivBase = Math.max(0, subTotal - manJian);
+  // 配送费基数 = 原价+打包-满减-神券（用于价格收费分档与佣金）
+  const delivBase = Math.max(0, subTotal - manJian - shenQuan);
   // 平台配送费（自动估算）
   const autoDelivery = calcDeliveryFee(plat, delivBase, dist, toggles);
   // 实际配送费（0=用自动估算）
@@ -382,18 +355,19 @@ function calc(){
   // 顾客实付配送费 = max(0, 平台配送费 - 商家补贴)
   const custDeliveryFinal = Math.max(0, platDelivery - delivSubsidy);
 
-  // 佣金基数 = 配送费基数（实测：佣金和配送费基数相同）
+  // 佣金（神抢手 5.5% 无保底，否则平台默认）
+  const commRate = (plat==='mt' && qsMode) ? 5.5 : p.commission;
+  const commMin  = (plat==='mt' && qsMode) ? 0 : p.minComm;
   const commBase = delivBase;
-  // 佣金
-  let commission = commBase * (p.commission/100);
-  if(commission < p.minComm) commission = p.minComm;
+  let commission = commBase * (commRate/100);
+  if(commission < commMin) commission = commMin;
 
   // ===== 计算顾客总支付 =====
-  const custPay = (price + packing - manJian) + custDeliveryFinal;
+  const custPay = (price + packEff - manJian - shenQuan) + custDeliveryFinal;
 
   // ===== 计算商家实收 =====
-  // 实测: 商家实收 = 原价 - 满减 - 佣金 - 平台配送费 - 配送补贴 + 打包费
-  const merchantIncome = price - manJian - commission - platDelivery - delivSubsidy + packing;
+  // 实测: 商家实收 = 原价 - 满减 - 神券 - 佣金 - 平台配送费 - 配送补贴 + 打包费
+  const merchantIncome = price - manJian - shenQuan - commission - platDelivery - delivSubsidy + packEff;
   // 利润（不含商品成本）
   const profit = merchantIncome - giftCost;
 
@@ -402,9 +376,9 @@ function calc(){
   const platRate = (price>0) ? (platTotal/price*100) : 0;
 
   return {
-    price, packing, subTotal, manJian, delivBase,
+    price, packing:packEff, packingRaw, subTotal, manJian, shenQuan, sqLabel:sq.label, delivBase,
     autoDelivery, platDelivery, delivSubsidy, custDeliveryFinal,
-    commission, commBase, custPay, merchantIncome, profit, platTotal, platRate,
+    commission, commRate, commBase, custPay, merchantIncome, profit, platTotal, platRate,
     giftCost, giftCount
   };
 }
@@ -439,7 +413,8 @@ function render(){
   html += '<div class="dr add"><span class="l">+ 打包费（顾客付）</span><span class="v">¥'+fmt(r.packing)+'</span></div>';
   if(r.giftCount>0) html += '<div class="dr sub"><span class="l">- 福利品成本（'+r.giftCount+'件）</span><span class="v">¥'+fmt(r.giftCost)+'</span></div>';
   if(r.manJian>0) html += '<div class="dr sub"><span class="l">- 满减（商家承担）</span><span class="v">¥'+fmt(r.manJian)+'</span></div>';
-  html += '<div class="dr sub"><span class="l">- 佣金（'+PLATFORMS[currentPlat].commission+'%）</span><span class="v">¥'+fmt(r.commission)+'</span></div>';
+  if(r.shenQuan>0) html += '<div class="dr sub"><span class="l">- 神券（'+r.sqLabel+'）</span><span class="v">¥'+fmt(r.shenQuan)+'</span></div>';
+  html += '<div class="dr sub"><span class="l">- 佣金（'+r.commRate+'%）</span><span class="v">¥'+fmt(r.commission)+'</span></div>';
   html += '<div class="dr sub"><span class="l">- 平台配送费</span><span class="v">¥'+fmt(r.platDelivery)+'</span></div>';
   if(r.delivSubsidy>0) html += '<div class="dr sub"><span class="l">- 配送补贴（活动承担）</span><span class="v">¥'+fmt(r.delivSubsidy)+'</span></div>';
   html += '<div class="dr total"><span class="l">商家实收</span><span class="v">¥'+fmt(r.merchantIncome)+'</span></div>';
@@ -454,7 +429,16 @@ function switchPlat(p){
   currentPlat = p;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.p===p));
   $('platHint').textContent = PLATFORMS[p].name;
-  // 京东/淘宝可能没有满减/补贴
+  // 神券/神抢手仅美团
+  $('qsRow').style.display = (p==='mt') ? 'flex' : 'none';
+  $('sqCard').style.display = (p==='mt') ? 'block' : 'none';
+  if(p==='mt'){
+    $('qs-zhuan').classList.toggle('on', !qsMode);
+    $('qs-qs').classList.toggle('on', qsMode);
+    $('sqOnCb').checked = sqOn;
+    renderSq();
+  }
+  const pk=$('inPacking'); pk.disabled=(p==='mt'&&qsMode); pk.style.opacity=(p==='mt'&&qsMode)?.4:1;
   renderMj();
   renderSub();
   onCalc();
@@ -561,13 +545,49 @@ function addSub(){
   renderSub();onCalc();
 }
 
+// ========== 神券 / 神抢手 ==========
+function calcSq(price){
+  if(currentPlat!=='mt' || !sqOn || qsMode) return {off:0, label:''};
+  let off=0, label='';
+  for(const t of sqList){ if(price >= t.min){ off=t.off; label='满'+t.min+'减'+t.off; } }
+  return {off, label};
+}
+function setQs(on){
+  qsMode = on;
+  $('qs-zhuan').classList.toggle('on', !on);
+  $('qs-qs').classList.toggle('on', on);
+  const pk = $('inPacking');
+  pk.disabled = on;
+  pk.style.opacity = on ? .4 : 1;
+  pk.style.background = on ? '#eee' : '';
+  const fee = document.querySelector('.tab[data-p="mt"] .fee');
+  if(fee) fee.textContent = on ? '佣金5.5%·无保底' : '佣金7.6%·保底1.06';
+  onCalc();
+}
+function setSqOn(v){ sqOn = v; onCalc(); }
+function renderSq(){
+  const c = $('sqList');
+  if(currentPlat!=='mt'){ c.innerHTML=''; return; }
+  let html='';
+  for(let i=0;i<sqList.length;i++){
+    const t=sqList[i];
+    html+='<div class="mj-row">';
+    html+='<span class="sep">满</span><input type="number" value="'+t.min+'" step="1" style="max-width:64px" onchange="sqList['+i+'].min=parseFloat(this.value)||0;onCalc()">';
+    html+='<span class="sep">减</span><input type="number" value="'+t.off+'" step="0.1" style="max-width:64px" onchange="sqList['+i+'].off=parseFloat(this.value)||0;onCalc()">';
+    html+='<button class="x" onclick="sqList.splice('+i+',1);renderSq();onCalc()">×</button>';
+    html+='</div>';
+  }
+  c.innerHTML=html;
+}
+function addSq(){ sqList.push({min:0,off:0}); renderSq(); onCalc(); }
+
 // ========== 持久化 ==========
 function saveInputs(){
   try{
     localStorage.setItem('wp3', JSON.stringify({
       plat: currentPlat, price:$('inPrice').value, packing:$('inPacking').value,
       dist:$('inDist').value, delivOverride:$('inDeliv').value,
-      toggles, gifts, mjList, subList
+      toggles, gifts, mjList, subList, sqOn, qsMode, sqList
     }));
   }catch(e){}
 }
@@ -584,6 +604,9 @@ function loadInputs(){
     if(d.gifts && d.gifts.length) gifts = d.gifts;
     if(d.mjList && d.mjList.length) mjList = d.mjList;
     if(d.subList && d.subList.length) subList = d.subList;
+    if(typeof d.sqOn==='boolean') sqOn = d.sqOn;
+    if(typeof d.qsMode==='boolean') qsMode = d.qsMode;
+    if(d.sqList && d.sqList.length) sqList = d.sqList;
   }catch(e){}
 }
 
@@ -596,25 +619,16 @@ function applyState(){
     const map = {peak:'tg-peak',night:'tg-night',long:'tg-long',rain:'tg-rain'};
     if(toggles[k]) $(map[k]).classList.add('on');
   }
+  // 神券/神抢手（仅美团）
+  $('qsRow').style.display = (currentPlat==='mt') ? 'flex' : 'none';
+  $('sqCard').style.display = (currentPlat==='mt') ? 'block' : 'none';
+  $('qs-zhuan').classList.toggle('on', !qsMode);
+  $('qs-qs').classList.toggle('on', qsMode);
+  const pk=$('inPacking'); pk.disabled=(currentPlat==='mt'&&qsMode); pk.style.opacity=(currentPlat==='mt'&&qsMode)?.4:1;
+  if(currentPlat==='mt'){ $('sqOnCb').checked = sqOn; renderSq(); }
   renderGifts();renderMj();renderSub();
 }
 
-// ========== VIP ==========
-function showVip(){ $('vipModal').classList.add('show'); }
-function hideVip(){ $('vipModal').classList.remove('show'); $('vipErr').style.display='none'; $('vipCode').value=''; }
-function activateVip(){
-  const code = $('vipCode').value.trim().toUpperCase();
-  if(!code) return;
-  // 简化校验：实际应调云函数
-  if(code.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/)){
-    localStorage.setItem('wpVip', code);
-    $('vipStatus').innerHTML = '✓ 会员已激活';
-    hideVip();
-    alert('激活成功！会员功能已解锁（演示版，正式版需云端校验）');
-  } else {
-    $('vipErr').style.display='block';
-  }
-}
 
 // ========== 启动 ==========
 loadInputs();
