@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>外卖定价器 Pro · 真实订单校准版</title>
+<title>外卖定价模拟器 Pro · 真实订单校准版</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -202,7 +202,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
 <div class="footer">
   <div>本工具与美团/淘宝/京东无任何隶属或合作关系</div>
   <div>数据基于公开收费规则测算，实际以平台后台为准</div>
-  <div style="margin-top:6px">外卖定价器 Pro · v3.2 · 真实订单校准版（含神券/神抢手·免费）</div>
+  <div style="margin-top:6px">外卖定价模拟器 Pro · v3.3 · 真实订单校准版（含神券/神抢手·免费）</div>
 </div>
 
 </div><!-- /app -->
@@ -214,8 +214,8 @@ const PLATFORMS = {
   mt:{name:'美团外卖',icon:'🟡',commission:7.6,minComm:1.06,
       // 距离费=起步价+阶梯附加（实测：0-3=2.5 / 3-3.5=+0.15 / 3.5-3.7=+0.9 / 3.7-5=+1.2 / 5-8=+1.5）
       distBase:2.5, distExtra:[[3,3.5,0.15],[3.5,3.7,0.9],[3.7,5,1.2],[5,8,1.5]],
-      // 价格收费（基数=原价+打包-满减-配送补贴）：0-20=0 / 20-30=(b-20)*0.15 / 30-50=0 / 50-60=5.6 / 60+=6.77
-      priceTiers:[[0,20,0],[20,30,b=>Math.max(0,(b-20)*0.15)],[30,50,0],[50,60,5.6],[60,999,6.77]],
+      // v3.3 价格收费：基数=原价+打包-满减-神券-配送补贴；收费≈(基数-20)*0.15
+      priceTiers:[[0,20,0],[20,30,b=>Math.max(0,(b-20)*0.15+0.05)],[30,50,b=>Math.max(0,(b-20)*0.15-0.15)],[50,60,5.5],[60,999,6.5]],
       // 附加费（长途/雨雪/高峰/深夜）
       extras:{peak:0.5,night:1,long:1.2,rain:1},
       hasMj:true,hasSub:true},
@@ -327,8 +327,9 @@ function calc(){
   const dist = parseFloat($('inDist').value)||0;       // 距离
   const delivOverride = parseFloat($('inDeliv').value)||0; // 0=自动估算
 
-  // 神抢手模式：平台禁用打包费
-  const packEff = (plat==='mt' && qsMode) ? 0 : packingRaw;
+  // 神抢手模式说明：商家可自行选择是否收打包费（订单 #2 实际神抢手仍收 ¥3 打包费）
+  // v3.3 修正：神抢手不再强制打包费=0，由商家在 inPacking 自行填入
+  const packEff = packingRaw;
 
   // 福利品
   let giftCost = 0, giftCount = 0;
@@ -340,18 +341,18 @@ function calc(){
 
   // 商品折后总价（含打包）
   const subTotal = price + packEff;
-  // 满减
-  const manJian = calcMj(mjList, subTotal);
+  // 满减（v3.3：神抢手模式也禁用满减，与美团后台规则一致）
+  const manJian = (plat==='mt' && qsMode) ? 0 : calcMj(mjList, subTotal);
+  // 配送补贴（按 subTotal 分档匹配）—— 必须先算，delivBase 公式要用
+  const delivSubsidy = calcSub(subList, subTotal);
 
-  // 配送费基数 = 原价+打包-满减-神券（用于价格收费分档与佣金）
-  const delivBase = Math.max(0, subTotal - manJian - shenQuan);
+  // 配送费基数 = 原价+打包-满减-神券-配送补贴（v3.3 实测修正：必须减配送补贴）
+  // 用于价格收费分档与佣金基数（与美团后台口径完全一致）
+  const delivBase = Math.max(0, subTotal - manJian - shenQuan - delivSubsidy);
   // 平台配送费（自动估算）
   const autoDelivery = calcDeliveryFee(plat, delivBase, dist, toggles);
   // 实际配送费（0=用自动估算）
   const platDelivery = delivOverride > 0 ? delivOverride : autoDelivery;
-
-  // 配送补贴（按 subTotal 分档匹配）
-  const delivSubsidy = calcSub(subList, subTotal);
   // 顾客实付配送费 = max(0, 平台配送费 - 商家补贴)
   const custDeliveryFinal = Math.max(0, platDelivery - delivSubsidy);
 
@@ -438,7 +439,7 @@ function switchPlat(p){
     $('sqOnCb').checked = sqOn;
     renderSq();
   }
-  const pk=$('inPacking'); pk.disabled=(p==='mt'&&qsMode); pk.style.opacity=(p==='mt'&&qsMode)?.4:1;
+  const pk=$('inPacking'); pk.disabled=false; pk.style.opacity=1; pk.style.background='';
   renderMj();
   renderSub();
   onCalc();
@@ -556,10 +557,8 @@ function setQs(on){
   qsMode = on;
   $('qs-zhuan').classList.toggle('on', !on);
   $('qs-qs').classList.toggle('on', on);
-  const pk = $('inPacking');
-  pk.disabled = on;
-  pk.style.opacity = on ? .4 : 1;
-  pk.style.background = on ? '#eee' : '';
+  // v3.3: 神抢手仍可让商家自填打包费，不再 disable
+  // 但视觉提示用 hint 文字，不强行置灰
   const fee = document.querySelector('.tab[data-p="mt"] .fee');
   if(fee) fee.textContent = on ? '佣金5.5%·无保底' : '佣金7.6%·保底1.06';
   onCalc();
@@ -624,7 +623,7 @@ function applyState(){
   $('sqCard').style.display = (currentPlat==='mt') ? 'block' : 'none';
   $('qs-zhuan').classList.toggle('on', !qsMode);
   $('qs-qs').classList.toggle('on', qsMode);
-  const pk=$('inPacking'); pk.disabled=(currentPlat==='mt'&&qsMode); pk.style.opacity=(currentPlat==='mt'&&qsMode)?.4:1;
+  const pk=$('inPacking'); pk.disabled=false; pk.style.opacity=1; pk.style.background='';
   if(currentPlat==='mt'){ $('sqOnCb').checked = sqOn; renderSq(); }
   renderGifts();renderMj();renderSub();
 }
