@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>外卖定价器 Pro v3.6 · 海饺鲜生专属（美团/淘宝闪购/京东外卖·神券测算）</title>
+<style>
+  :root{
+    --teal:#12B886; --teal-d:#0CA678; --teal-l:#E6F7F1; --teal-xl:#F2FBF8;
+    --ink:#21302B; --sub:#6B7C77; --line:#ECF1EF; --bg:#F5F7F6;
+    --red:#E8503A; --amber:#E08A1E;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; background:#E9EDEB; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+    display:flex; justify-content:center; padding:24px 12px; gap:28px; flex-wrap:wrap;
+  }
+  .stage{display:flex; gap:28px; flex-wrap:wrap; justify-content:center; align-items:flex-start;}
+  .side{width:260px; color:#5a6a64; font-size:13px; line-height:1.7;}
+  .side h3{color:var(--teal-d); font-size:15px; margin:0 0 8px;}
+  .side ul{padding-left:18px; margin:6px 0;}
+  .side code{background:#fff; border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--teal-d);}
+  /* phone frame */
+  .phone{
+    width:390px; height:844px; background:#fff; border-radius:46px;
+    box-shadow:0 18px 60px rgba(20,60,50,.22), inset 0 0 0 11px #11100f;
+    position:relative; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .notch{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:148px; height:26px; background:#11100f; border-radius:0 0 16px 16px; z-index:30;}
+  .statusbar{height:50px; flex:0 0 50px; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 28px 0; font-size:14px; font-weight:600; z-index:20;}
+  .statusbar .sb-right{display:flex; gap:6px; align-items:center;}
+  .navbar{flex:0 0 46px; background:var(--teal); color:#fff; display:flex; align-items:center; padding:0 12px; z-index:10; position:relative;}
+  .navbar .back{width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:26px; cursor:pointer; visibility:hidden;}
+  .navbar .back.show{visibility:visible;}
+  .navbar .title{flex:1; text-align:center; font-size:17px; font-weight:600; padding-right:32px;}
+  .content{flex:1; overflow-y:auto; background:var(--bg); padding-bottom:8px; -webkit-overflow-scrolling:touch;}
+  .content::-webkit-scrollbar{width:0;}
+  .tabbar{flex:0 0 64px; background:#fff; border-top:1px solid var(--line); display:flex;}
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--sub); cursor:pointer; font-size:11px;}
+  .tab.active{color:var(--teal);}
+  .tab svg{width:25px; height:25px;}
+
+  /* design system */
+  .page-wrap{padding:14px 14px 18px;}
+  .hero-card{background:linear-gradient(135deg,var(--teal),var(--teal-d)); border-radius:16px; padding:18px 18px 16px; color:#fff; box-shadow:0 8px 22px rgba(18,184,134,.28);}
+  .hc-title{font-size:21px; font-weight:800; letter-spacing:.5px;}
+  .hc-sub{font-size:12.5px; opacity:.92; margin-top:5px;}
+  .hc-chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:13px;}
+  .chip{background:rgba(255,255,255,.20); border:1px solid rgba(255,255,255,.35); color:#fff; font-size:12px; padding:4px 11px; border-radius:20px;}
+  .info-card{background:#fff; border-radius:13px; margin-top:12px; padding:4px 14px; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .info-head{display:flex; justify-content:space-between; align-items:center; padding:13px 0; cursor:pointer; font-size:14.5px; font-weight:600; color:var(--ink);}
+  .info-head .ih-a{color:var(--sub); font-size:13px; font-weight:500;}
+  .info-body{padding:2px 0 14px;}
+  .qa{padding:7px 0; border-top:1px dashed var(--line);}
+  .qa:first-child{border-top:none;}
+  .q{font-size:13.5px; font-weight:600; color:var(--teal-d); margin-bottom:3px;}
+  .a{font-size:13px; color:#56635e; line-height:1.6;}
+  .promo-card{display:flex; align-items:center; gap:11px; background:#fff; border:1px solid #D7F0E6; border-left:4px solid var(--teal); border-radius:13px; margin-top:12px; padding:13px 14px; cursor:pointer;}
+  .pc-ico{font-size:26px;}
+  .pc-name{font-size:15px; font-weight:700; color:var(--ink);}
+  .pc-desc{font-size:12px; color:var(--sub); margin-top:3px; line-height:1.5;}
+  .pc-tag{background:var(--teal); color:#fff; font-size:11px; padding:3px 9px; border-radius:20px; font-weight:600;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:12px;}
+  .g-card{position:relative; background:#fff; border-radius:13px; padding:14px 13px 13px; box-shadow:0 2px 10px rgba(40,80,70,.05); cursor:pointer; border:1px solid var(--line);}
+  .gc-tag{position:absolute; top:0; right:0; background:var(--teal-l); color:var(--teal-d); font-size:10.5px; padding:3px 8px; border-radius:0 13px 0 13px; font-weight:600;}
+  .gc-tag.adv{background:#FFF1DE; color:#C9780F;}
+  .gc-ico{font-size:23px;}
+  .gc-name{font-size:14px; font-weight:700; margin-top:7px; color:var(--ink); line-height:1.35;}
+  .gc-desc{font-size:11.5px; color:var(--sub); margin-top:5px; line-height:1.55; min-height:34px;}
+  .disclaimer{font-size:11px; color:#9AA8A4; text-align:center; margin-top:14px;}
+
+  .formula-card{background:var(--teal-xl); border:1px solid #CDEFE2; border-radius:13px; padding:13px 14px; margin-top:12px;}
+  .fc-t{font-size:14px; font-weight:700; color:var(--teal-d); margin-bottom:7px;}
+  .fc-c{font-size:12.5px; color:#3f524b; line-height:1.7;}
+  .blk-title{font-size:13px; font-weight:700; color:var(--ink); margin:16px 2px 8px; display:flex; align-items:center; gap:7px;}
+  .blk-title::before{content:""; width:4px; height:13px; background:var(--teal); border-radius:3px; display:inline-block;}
+  .row-group{background:#fff; border-radius:13px; padding:2px 14px; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .field-row{display:flex; align-items:center; padding:13px 0; border-bottom:1px solid var(--line); gap:10px;}
+  .field-row:last-child{border-bottom:none;}
+  .fr-label{flex:1; font-size:14px; color:#33403b;}
+  .fr-input{flex:0 0 92px; text-align:right; font-size:15px; color:var(--ink); border:none; outline:none; background:var(--teal-xl); border-radius:8px; padding:7px 10px; font-weight:600;}
+  .fr-unit{flex:0 0 auto; font-size:13px; color:var(--sub); width:54px; text-align:right;}
+  .fr-static{flex:1; text-align:right; font-size:14px; color:var(--ink); font-weight:600;}
+  .picker-row{display:block;}
+  .opt-group{display:flex; gap:10px; margin:4px 0;}
+  .opt{flex:1; text-align:center; padding:11px 0; border:1.5px solid var(--line); border-radius:11px; font-size:14px; color:var(--sub); font-weight:600; cursor:pointer; background:#fff;}
+  .opt.active{background:var(--teal-l); border-color:var(--teal); color:var(--teal-d);}
+  .result-card{background:#fff; border-radius:15px; padding:17px 16px; margin-top:6px; box-shadow:0 4px 16px rgba(40,80,70,.07);}
+  .rc-label{font-size:13px; color:var(--sub);}
+  .result-hero{font-size:38px; font-weight:800; color:var(--teal-d); margin:4px 0 12px; line-height:1;}
+  .result-sub{font-size:12.5px; color:var(--sub); margin:-6px 0 12px;}
+  .result-line{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-top:1px solid var(--line); font-size:14px;}
+  .result-line .rl-k{color:#56635e;}
+  .result-line .rl-v{font-weight:700; color:var(--ink);}
+  .result-line.strong{border-top:2px solid var(--teal-l); margin-top:2px;}
+  .result-line.strong .rl-v{color:var(--teal-d); font-size:16px;}
+  .rl-v.plus{color:var(--teal-d);} .rl-v.minus{color:var(--red);}
+  .mini-grid{display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:12px;}
+  .mini-card{background:#fff; border-radius:13px; padding:13px; text-align:center; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .mc-l{font-size:12.5px; color:var(--sub);}
+  .mc-v{font-size:21px; font-weight:800; color:var(--ink); margin-top:5px;}
+  .mc-v.green{color:var(--teal-d);} .mc-v.red{color:var(--red);}
+  .mc-sub{font-size:12px; color:var(--sub); margin-top:3px;}
+  .notice{display:flex; gap:8px; align-items:flex-start; background:#FFF8EC; border:1px solid #FBE6C0; color:#8a6418; font-size:12.5px; line-height:1.6; padding:11px 13px; border-radius:11px; margin-top:12px;}
+  .notice.green{background:#EAFaf3; border-color:#CDEFE2; color:#0e7a55;}
+  .notice.warn{background:#FFF8EC; border-color:#FBE6C0; color:#8a6418;}
+  .footer-btns{display:flex; gap:10px; margin-top:16px;}
+  .fb{flex:1; border:none; border-radius:12px; padding:13px 0; font-size:15px; font-weight:700; cursor:pointer;}
+  .fb-share{background:var(--teal-l); color:var(--teal-d);}
+  .fb-clear{background:#fff; color:var(--sub); border:1px solid var(--line);}
+  .fb-save{background:var(--teal); color:#fff;}
+  .tbl{background:#fff; border-radius:13px; overflow:hidden; margin-top:6px; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .tbl-head{display:flex; background:var(--teal-xl); font-size:12.5px; font-weight:700; color:var(--teal-d);}
+  .tbl-row{display:flex; border-top:1px solid var(--line); font-size:13px;}
+  .tc{flex:1; padding:11px 8px; text-align:center; color:#3f524b;}
+  .tc.hl{color:var(--teal-d); font-weight:700;}
+  .tc.good{color:var(--teal-d); font-weight:700;}
+  .tc.bad{color:var(--red); font-weight:700;}
+  .tc:nth-child(2),.tc:nth-child(3),.tc:nth-child(4){flex:1;}
+
+  .chips-wrap{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
+  .time-opt{background:#fff; border:1px solid var(--line); color:var(--sub); font-size:12.5px; padding:8px 11px; border-radius:20px; cursor:pointer; font-weight:600;}
+  .time-opt.active{background:var(--teal-l); border-color:var(--teal); color:var(--teal-d);}
+  input[type=range]{width:100%; accent-color:var(--teal); margin-top:8px;}
+  .slider-row{display:flex; align-items:center; gap:12px;}
+  .slider-row input[type=range]{flex:1;}
+
+  .cp-block{margin-top:12px;}
+  .cp-head{font-size:12.5px; color:var(--sub); margin-bottom:6px;}
+  .cp-row{display:flex; gap:9px;}
+  .cp-input{flex:1; background:var(--teal-xl); border:none; border-radius:9px; padding:10px 11px; font-size:14px; outline:none; font-weight:600; text-align:center;}
+  .add-cp{margin-top:12px; text-align:center; color:var(--teal-d); font-size:13.5px; font-weight:600; background:var(--teal-xl); border:1px dashed var(--teal); border-radius:10px; padding:10px; cursor:pointer;}
+
+  .card2{background:#fff; border-radius:13px; padding:14px; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .cost-grid{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .cost-item{background:var(--teal-xl); border-radius:10px; padding:11px;}
+  .ci-l{font-size:12.5px; color:var(--sub);}
+  .ci-i{width:100%; border:none; background:transparent; outline:none; font-size:19px; font-weight:800; color:var(--teal-d); padding:4px 0 0; text-align:left;}
+  .daily-fixed{display:flex; justify-content:space-between; align-items:center; margin-top:13px; padding-top:12px; border-top:1px solid var(--line); font-size:13.5px; color:var(--sub);}
+  .df-v{font-size:16px; font-weight:800; color:var(--teal-d);}
+
+  .bom-head{display:flex; font-size:11.5px; color:var(--sub); padding:10px 2px 7px;}
+  .bh-name{flex:1.6;} .bh-num{flex:1; text-align:center;} .bh-cost{flex:1; text-align:center;}
+  .bom-row{display:flex; align-items:center; gap:6px; padding:5px 0; border-top:1px solid var(--line);}
+  .bom-name{flex:1.6; background:var(--teal-xl); border:none; border-radius:8px; padding:8px 9px; font-size:13px; outline:none;}
+  .bom-num{flex:1; background:var(--teal-xl); border:none; border-radius:8px; padding:8px 0; font-size:13px; outline:none; text-align:center; width:0;}
+  .bom-cost{flex:1; text-align:center; font-size:13px; font-weight:700; color:var(--teal-d);}
+  .bom-del{flex:0 0 22px; text-align:center; color:#C9D2CE; cursor:pointer; font-size:14px;}
+
+  .band{margin:12px 2px 0;}
+  .band-track{height:7px; background:#E2EAE7; border-radius:6px; position:relative;}
+  .band-you{position:absolute; top:50%; width:15px; height:15px; background:var(--teal); border:2px solid #fff; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,.2);}
+  .band-you-label{font-size:12px; color:var(--teal-d); margin-top:8px; font-weight:700;}
+
+  /* history / mine */
+  .record{background:#fff; border-radius:13px; padding:13px 14px; margin-top:12px; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .rec-top{display:flex; justify-content:space-between; font-size:13.5px;}
+  .rec-tool{font-weight:700; color:var(--ink);}
+  .rec-time{color:var(--sub); font-size:12px;}
+  .rec-out{font-size:13px; color:var(--teal-d); margin-top:6px; font-weight:600;}
+  .btn-clear{width:100%; margin-top:16px; background:#fff; border:1px solid var(--line); color:var(--red); border-radius:12px; padding:13px; font-size:14.5px; font-weight:700; cursor:pointer;}
+  .empty{text-align:center; color:#9AA8A4; padding:70px 0; font-size:14px; line-height:2;}
+  .empty-ico{font-size:46px; display:block; margin-bottom:10px;}
+  .hero{background:linear-gradient(135deg,var(--teal),var(--teal-d)); border-radius:16px; padding:22px 18px; color:#fff; text-align:center;}
+  .hero-title{font-size:20px; font-weight:800;}
+  .hero-sub{font-size:12.5px; opacity:.9; margin-top:6px;}
+  .section-title{font-size:15px; font-weight:800; color:var(--ink); margin:18px 2px 12px;}
+  .section-title .t{position:relative; padding-left:11px;}
+  .section-title .t::before{content:""; position:absolute; left:0; top:2px; width:4px; height:15px; background:var(--teal); border-radius:3px;}
+  .tip{display:flex; gap:8px; background:#fff; border-radius:12px; padding:13px; font-size:12.5px; color:#56635e; line-height:1.65; margin-top:12px;}
+  .card{background:#fff; border-radius:13px; padding:14px; margin-top:11px; box-shadow:0 2px 10px rgba(40,80,70,.05);}
+  .tip-title{font-size:14px; font-weight:700; color:var(--teal-d);}
+  .tip-desc{font-size:12.5px; color:#56635e; margin-top:5px; line-height:1.6;}
+
+  .toast{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(20,30,26,.86); color:#fff; font-size:13.5px; padding:11px 18px; border-radius:10px; z-index:50; opacity:0; transition:opacity .2s; pointer-events:none; white-space:nowrap;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar">
+      <span id="clock">9:41</span>
+      <span class="sb-right">
+        <svg width="17" height="13" viewBox="0 0 17 13"><rect x="0" y="8" width="3" height="5" rx="1" fill="#fff"/><rect x="4.5" y="5" width="3" height="8" rx="1" fill="#fff"/><rect x="9" y="2.5" width="3" height="10.5" rx="1" fill="#fff"/><rect x="13.5" y="0" width="3" height="13" rx="1" fill="#fff"/></svg>
+        <svg width="24" height="13" viewBox="0 0 24 13"><rect x="0.5" y="0.5" width="20" height="12" rx="3" fill="none" stroke="#fff" stroke-width="1"/><rect x="2" y="2" width="15" height="9" rx="1.5" fill="#fff"/><rect x="21" y="4" width="2.5" height="5" rx="1" fill="#fff"/></svg>
+      </span>
+    </div>
+    <div class="navbar">
+      <div class="back" id="backBtn">&lsaquo;</div>
+      <div class="title" id="navTitle">配送定价助手</div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="tabbar" id="tabbar"></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="side">
+    <h3>静态预览说明</h3>
+    <p>这是「配送定价助手」复刻版的<strong>浏览器预览</strong>，单文件即可双击打开，无需微信开发者工具。</p>
+    <ul>
+      <li>底部 3 个 Tab 切换 <code>工具箱 / 历史 / 我的</code></li>
+      <li>首页点任意工具卡进入对应计算器</li>
+      <li>所有输入框<strong>实时计算</strong>，公式与小程序源码一致</li>
+      <li>青绿配色 <code>#12B886</code>，已避开原版橙</li>
+    </ul>
+    <p>数据仅存于本页内存，刷新即重置。要真正发布请导入微信开发者工具使用源码工程。</p>
+  </div>
+</div>
+
+<script>
+/* ---------- icons ---------- */
+const ICONS = {
+  toolbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/><line x1="12" y1="8" x2="12" y2="13"/><rect x="10.4" y="11" width="3.2" height="3" rx="0.8"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.4"/><line x1="12" y1="12" x2="12" y2="6.5"/><line x1="12" y1="12" x2="15.5" y2="14"/></svg>',
+  person:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'
+};
+const TABS = [
+  {page:'index', text:'工具箱', icon:'toolbox'},
+  {page:'history', text:'历史', icon:'clock'},
+  {page:'mine', text:'我的', icon:'person'}
+];
+
+/* 阶梯神券（按商品原价分档，平台 1:1 补贴，新客再 +1）—— 海饺鲜生美团实测规则 */
+function shenquanByOriginal(orig){
+  if(orig<20) return 6; if(orig<28) return 7; if(orig<38) return 9; if(orig<48) return 11;
+  if(orig<58) return 12; if(orig<68) return 14; if(orig<88) return 15; if(orig<128) return 18;
+  return 22;
+}
+
+/* ---------- state (mirror mini-program defaults) ---------- */
+/* 默认费率以「海饺鲜生台东店」真实后台规则为准：美团 7.6% 保底 1.06 / 京东外卖 6%+3 元履约 / 淘宝闪购 5% */
+const S = {
+  index:{},
+  cost:{ margin:'65', items:[{name:'面皮',qty:'0.1',price:'8'},{name:'馅料',qty:'0.15',price:'20'},{name:'包装盒',qty:'1',price:'0.6'}] },
+  roi:{ f:{access:'100',conv:'3.82',price:'30',rep:'2',cost:'185'} },
+  commission:{ f:{amount:'67',rate:'7.6',cut:'20',ship:'3'}, adv:{subsidy:'0'}, pIndex:0, bIndex:0,
+    bears:['商家全出','平台全出','各出一半'],
+    platforms:['美团','淘宝闪购','京东外卖'],
+    platformRates:[7.6,5,6], platformShip:[2.5,3,3], platformMinFee:[1.06,1,0],
+    sq:{on:true,auto:true,manual:'0',newCust:'1'} },
+  delivery:{ f:{avgPrice:'35',cost:'15',rate:'20',cutRatio:'15',shipSelf:'2'}, competitors:[{min:'20',ship:'3'}] },
+  fullReduction:{ f:{target:'18',rate:'7.6',cost:'8',minPrice:'20'}, pIndex:0 },
+  actualPrice:{ f:{target:'20',pack:'1',shipFee:'2.5',rate:'7.6',minFee:'1.06'}, pIndex:0, mIndex:0, tIndex:0, distance:3,
+    platforms:['美团外卖','淘宝闪购','京东外卖'],
+    platformRates:[7.6,5,6], platformMinFee:[1.06,1,0], platformShip:[2.5,3,3],
+    sq:{on:true,auto:true,manual:'0',newCust:'1'} },
+  newProduct:{ f:{cost:'9',margin:'65',sens:'2'}, competitors:[{price:'25',name:'如:老王快餐'}] },
+  breakeven:{ f:{rent:'5000',mgmt:'400',labor:'9000',utility:'1500',avgCost:'7',avgPrice:'30'} },
+  history:{ list:[
+    {tool:'平台扣点计算器', time:'09-29 11:00', output:'商家实收 ¥25.4'},
+    {tool:'外卖满减计算器', time:'09-29 10:50', output:'建议定价 ¥18.00'},
+    {tool:'外卖到手价计算器', time:'09-29 10:42', output:'推荐标价 ¥23.65'}
+  ]},
+  mine:{}, compare:{ f:{ amount:'30', cut:'5', ship:'3' }, sq:{on:true,auto:true,manual:'0'} }
+};
+const TITLES = {
+  index:'外卖利润参谋', cost:'菜品成本计算器', roi:'外卖推广ROI计算器',
+  commission:'平台扣点计算器', delivery:'起送价&配送费计算器', fullReduction:'外卖满减计算器',
+  actualPrice:'外卖到手价计算器', newProduct:'新品定价计算器', breakeven:'盈亏平衡点计算器',
+  compare:'平台横向对比', history:'历史记录', mine:'我的'
+};
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const num = v => { const n = parseFloat(v); return isNaN(n) ? NaN : n; };
+const r2 = x => Math.round(x*100)/100;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1400); }
+
+/* ---------- renderers ---------- */
+function infoCard(qa){ // qa: [ [q,a], ... ]
+  return `<div class="info-card"><div class="info-head" data-act="toggleInfo"><text class="ih-t">计算说明</text><text class="ih-a" id="infoA">展开 ∨</text></div><div class="info-body" id="infoBody" style="display:none">${qa.map(([q,a])=>`<div class="qa"><div class="q">${q}</div><div class="a">${a}</div></div>`).join('')}</div></div>`;
+}
+function field(k,label,val,unit,group='f'){
+  return `<div class="field-row"><text class="fr-label">${label}</text><input class="fr-input" type="text" inputmode="decimal" data-group="${group}" data-k="${k}" value="${val}" /><text class="fr-unit">${unit}</text></div>`;
+}
+function disclaimer(){ return `<div class="disclaimer">* 计算结果仅供参考，具体以实际经营数据为准。默认费率为海饺鲜生真实规则（美团 7.6% 保底 1.06 / 京东外卖 6%+3 元履约），可按后台调整。</div>`; }
+function footerBtns(opts){
+  const b = opts.map(o=>`<button class="fb fb-${o.c}" data-act="${o.a}">${o.t}</button>`).join('');
+  return `<div class="footer-btns">${b}</div>`;
+}
+
+const RENDER = {
+  index(){
+    const chips = ['成本核算','毛利定价','满减扣点','盈亏平衡','推广ROI'].map(c=>`<div class="chip">${c}</div>`).join('');
+    const tools = [
+      {path:'actualPrice',tag:'热门',name:'外卖到手价计算器',desc:'美团/淘宝闪购双平台，价格+时段+距离三段分配送费',ico:'🧾'},
+      {path:'newProduct',tag:'常用',name:'新品定价计算器',desc:'按目标毛利率定价，对比竞对价格带，价格敏感度分析',ico:'💲'},
+      {path:'breakeven',tag:'常用',name:'盈亏平衡点计算器',desc:'月固定成本÷边际贡献率，自动算单日盈亏线和盈亏区',ico:'📈'},
+      {path:'roi',tag:'进阶',name:'外卖推广ROI计算器',desc:'访问量提升×转化率×客单价×复购次数，算真实ROI含长期',ico:'🚀',adv:true},
+      {path:'commission',tag:'进阶',name:'平台扣点计算器',desc:'美团/淘宝闪购扣费测算，满减分摊、配送费、活动费用',ico:'🏦',adv:true},
+      {path:'delivery',tag:'进阶',name:'起送价&配送费计算器',desc:'结合商圈客单、竞对、成本，给出三档起送价建议',ico:'🛵',adv:true},
+      {path:'fullReduction',tag:'常用',name:'外卖满减计算器',desc:'输入目标实收，反推菜品定价和满减档位方案',ico:'🎯'}
+    ];
+    const grid = tools.map(t=>`<div class="g-card" data-act="go" data-page="${t.path}"><div class="gc-tag ${t.adv?'adv':''}">${t.tag}</div><div class="gc-ico">${t.ico}</div><div class="gc-name">${t.name}</div><div class="gc-desc">${t.desc}</div></div>`).join('');
+    return `
+      <div class="page-wrap">
+        <div class="hero-card"><div class="hc-title">餐饮经营计算器</div><div class="hc-sub">覆盖经营全场景 · 算清每一笔账</div><div class="hc-chips">${chips}</div></div>
+        ${infoCard([['为什么每笔账都要单独算？','外卖成本结构复杂：平台扣点、满减、配送费、推广费各不相同，逐项算清才知道真实利润。'],['这些工具适合谁？','适合外卖/闪购店铺的经营者、店长与合伙人，对日常定价与盈亏做快速测算。'],['输入的数据会上传吗？','不会。所有计算都在你的手机本地完成，不联网、不上传。']])}
+        <div class="promo-card" data-act="go" data-page="cost"><text class="pc-ico">🍜</text><div style="flex:1"><div class="pc-name">菜品成本计算器</div><div class="pc-desc">BOM物料逐行录入，自动换算单位，按毛利率反推售价</div></div><text class="pc-tag">推荐</text></div>
+        <div class="grid">${grid}</div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  cost(){
+    const rows = S.cost.items.map((it,i)=>`
+      <div class="bom-row">
+        <input class="bom-name" type="text" placeholder="物料名" data-group="items" data-i="${i}" data-k="name" value="${it.name}" />
+        <input class="bom-num" type="text" inputmode="decimal" placeholder="用量" data-group="items" data-i="${i}" data-k="qty" value="${it.qty}" />
+        <input class="bom-num" type="text" inputmode="decimal" placeholder="单价" data-group="items" data-i="${i}" data-k="price" value="${it.price}" />
+        <text class="bom-cost">¥${(num(it.qty)*num(it.price)).toFixed(2)}</text>
+        <text class="bom-del" data-act="delItem" data-i="${i}">✕</text>
+      </div>`).join('');
+    return `
+      <div class="page-wrap">
+        ${infoCard([['为什么按 BOM 算成本？','把每份菜的原料按用量 × 单价逐行录入，自动汇总单份成本，比拍脑袋估算准得多。'],['单位怎么换算？','用量填每份菜实际使用的数量，单价填该单位的采购价。例如面皮每份 0.1 斤、单价 8 元/斤。'],['售价怎么定？','输入目标毛利率，自动反推建议售价 = 单份成本 ÷（1 - 毛利率）。']])}
+        <div class="blk-title">物料清单</div>
+        <div class="info-card" style="padding:0 14px 14px">
+          <div class="bom-head"><text class="bh-name">物料名</text><text class="bh-num">用量</text><text class="bh-num">单价</text><text class="bh-cost">小计</text></div>
+          <div id="listBom">${rows}</div>
+          <div class="add-cp" data-act="addItem">+ 添加物料</div>
+        </div>
+        <div class="blk-title">定价</div>
+        <div class="row-group">
+          <div class="field-row"><text class="fr-label">单份总成本</text><text class="fr-static" id="ctTotal">¥0.00</text></div>
+          <div class="field-row"><text class="fr-label">目标毛利率</text><input class="fr-input" type="text" inputmode="decimal" data-group="margin" data-k="margin" value="${S.cost.margin}" /><text class="fr-unit">%</text></div>
+        </div>
+        <div id="outCost"></div>
+        ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'保存',c:'save',a:'save'}])}
+        ${disclaimer()}
+      </div>`;
+  },
+
+  roi(){
+    return `
+      <div class="page-wrap">
+        ${infoCard([['为什么要算真实ROI？','短期只看单次成交，会低估推广价值。真实ROI算上顾客90天复购，反映推广的真实回报。'],['访问提升数据从哪取？','在推广后台看「访问量提升数据」，或按「访问提升数 ×（入店次数 ÷ 进店数）」换算。'],['ROI多少算正常？','ROI>3 优秀，建议加大投入；1~3 良好，可维持；低于1 说明亏本，要调整策略。']])}
+        <div class="formula-card"><div class="fc-t">真实ROI核心公式</div><div class="fc-c">真实新增销售额 = 访问提升顾客数 × 下单转化率 × 实收客单价 × 近90天购买次数</div><div class="fc-c">真实ROI = 真实新增销售额 ÷ 推广投入成本</div></div>
+        <div class="row-group">
+          ${field('access','访问提升顾客数',S.roi.f.access,'人')}
+          ${field('conv','下单转化率',S.roi.f.conv,'%')}
+          ${field('price','实收客单价',S.roi.f.price,'元')}
+          ${field('rep','复购次数',S.roi.f.rep,'次/90天')}
+          ${field('cost','推广投入成本',S.roi.f.cost,'元')}
+        </div>
+        <div id="outRoi"></div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  commission(){
+    const c=S.commission, plats=c.platforms, bears=c.bears, sq=c.sq;
+    return `
+      <div class="page-wrap">
+        ${infoCard([['平台扣点怎么算？','输入订单金额和扣点率，自动算出商家实收多少钱。默认按海饺鲜生真实规则：美团 7.6% 保底 1.06 元。'],['满减谁承担？','可以设置平台补贴比例，自动分摊满减金额。'],['神券怎么算？','美团阶梯神券按商品原价分档、平台 1:1 补贴，新客券再 +1 元，都直接侵蚀你的实收。'],['配送费怎么算？','可以选商家全出、平台全出、各出一半，自动计算。']])}
+        <div class="row-group">
+          ${field('amount','订单金额（原价）',c.f.amount,'元')}
+          <div class="picker-row"><div class="field-row"><text class="fr-label">平台</text><select class="fr-input" style="flex:0 0 auto;width:130px" data-group="pIndex">${plats.map((p,i)=>`<option value="${i}" ${i===c.pIndex?'selected':''}>${p}</option>`).join('')}</select></div></div>
+          ${field('rate','扣点率',c.f.rate,'%')}
+          ${field('cut','满减金额',c.f.cut,'元')}
+          ${field('ship','配送费（商家承担）',c.f.ship,'元')}
+          <div class="picker-row"><div class="field-row"><text class="fr-label">配送费承担</text><select class="fr-input" style="flex:0 0 auto;width:120px" data-group="bIndex">${bears.map((p,i)=>`<option value="${i}" ${i===c.bIndex?'selected':''}>${p}</option>`).join('')}</select></div></div>
+        </div>
+        <div class="info-card"><div class="info-head" data-act="toggleSq"><text class="ih-t">神券 / 新客券（顶格承担）</text><text class="ih-a">${sq.on?'计入 ∧':'不计入 ∨'}</text></div>
+          <div class="info-body" ${sq.on?'':'style="opacity:.45"'}>
+            <div class="opt-group"><div class="opt ${sq.auto?'active':''}" data-act="toggleSqAuto">按原价自动分档</div><div class="opt ${!sq.auto?'active':''}" data-act="toggleSqAuto">手动填</div></div>
+            ${sq.auto?'':`<div class="picker-row"><div class="field-row"><text class="fr-label">神券商家承担</text><input class="fr-input" type="text" inputmode="decimal" data-group="sq" data-k="manual" value="${sq.manual}" /><text class="fr-unit">元</text></div></div>`}
+            <div class="picker-row"><div class="field-row"><text class="fr-label">新客券（商家）</text><input class="fr-input" type="text" inputmode="decimal" data-group="sq" data-k="newCust" value="${sq.newCust}" /><text class="fr-unit">元</text></div></div>
+            <div class="qa"><div class="a">美团阶梯神券（按原价）：&lt;20补6 / 20-28补7 / 28-38补9 / 38-48补11 / 48-58补12 / 58-68补14 / 68-88补15 / 88-128补18 / ≥128补22，平台 1:1 补贴，新客再 +1。</div></div>
+          </div>
+        </div>
+        <div class="info-card"><div class="info-head" data-act="toggleAdv"><text class="ih-t">高级设置（平台满减补贴）</text><text class="ih-a" id="advA">展开 ∨</text></div><div class="info-body" id="advBody" style="display:none">${field('subsidy','平台满减补贴比例',c.adv.subsidy,'%','adv')}</div></div>
+        <div id="outCommission"></div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  delivery(){
+    const cp = S.delivery.competitors.map((c,i)=>`
+      <div class="cp-block"><div class="cp-head">竞对${i+1}${i===0?'（必填）':''}</div><div class="cp-row">
+        <input class="cp-input" type="text" inputmode="decimal" placeholder="起送价" data-group="competitors" data-i="${i}" data-k="min" value="${c.min}" />
+        <input class="cp-input" type="text" inputmode="decimal" placeholder="配送费" data-group="competitors" data-i="${i}" data-k="ship" value="${c.ship}" />
+      </div></div>`).join('');
+    return `
+      <div class="page-wrap">
+        ${infoCard([['起送价怎么定？','参考商圈客单价和竞对价格，给出冲量、平衡、利润三档建议。'],['配送费收多少合适？','根据客单价自动建议，客单价低可免配送费，客单价高可收 4-5 元。'],['怎么查看竞对价格？','打开外卖平台，搜你这个品类，按销量排序看前 3 名就行。']])}
+        <div class="row-group">
+          ${field('avgPrice','商圈平均客单',S.delivery.f.avgPrice,'元')}
+          ${field('cost','成本线',S.delivery.f.cost,'元')}
+          ${field('rate','平台扣点率',S.delivery.f.rate,'%')}
+          ${field('cutRatio','预估满减比例',S.delivery.f.cutRatio,'%')}
+          ${field('shipSelf','商家承担配送费',S.delivery.f.shipSelf,'元')}
+        </div>
+        <div class="blk-title">竞对数据（${S.delivery.competitors.length}/3）</div>
+        <div class="info-card" style="padding:0 14px 14px">
+          <div class="notice warn"><text>⚡</text><text>怎么快速查看竞对价？打开外卖平台，搜你这个品类，按销量排序，看前 3 名的起送价和配送费就行。</text></div>
+          <div id="listCp">${cp}</div>
+          ${S.delivery.competitors.length<3?`<div class="add-cp" data-act="addCp">+ 添加一家竞对</div>`:''}
+        </div>
+        <div id="outDelivery"></div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  fullReduction(){
+    const opt=(i,t)=>`<div class="opt ${S.fullReduction.pIndex===i?'active':''}" data-act="platform" data-i="${i}">${t}</div>`;
+    return `
+      <div class="page-wrap">
+        ${infoCard([['满减怎么设才不亏？','输入你想实收多少钱，自动算出满减档位和菜品定价。'],['支持哪些平台？','支持美团/淘宝闪购/京东外卖，一键切换扣点率。海饺鲜生默认美团 7.6%、京东外卖 6%。'],['参考满减档位？','本店实测有效档位：满 28 减 6 / 满 45 减 12 / 满 80 减 20，可据此校准下方建议方案。']])}
+        <div class="row-group">
+          <div class="opt-group">${opt(0,'美团')}${opt(1,'淘宝闪购')}${opt(2,'京东外卖')}</div>
+          ${field('target','目标实收',S.fullReduction.f.target,'元')}
+          ${field('rate','扣点率',S.fullReduction.f.rate,'%')}
+          ${field('cost','单均成本',S.fullReduction.f.cost,'元')}
+          ${field('minPrice','起送价',S.fullReduction.f.minPrice,'元')}
+        </div>
+        <div class="notice warn"><text>💡</text><text>单均成本是一单平均的菜品成本（含包装）。若一单含 1.5 份菜，单均成本 = 1.5 × 单份成本。</text></div>
+        <div id="outFull"></div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  actualPrice(){
+    const opt=(g,i,t,act)=>`<div class="opt ${S.actualPrice[g]===i?'active':''}" data-act="${act}" data-i="${i}">${t}</div>`;
+    const times=['早餐 06:00-09:59','午餐 10:00-13:59','下午茶 14:00-16:59','晚餐 17:00-20:59','夜宵 21:00-05:59'];
+    return `
+      <div class="page-wrap">
+        ${infoCard([['到手价是什么？','顾客到手实付金额，已扣除所有优惠（满减、神券、新客券）、平台佣金和配送服务费。'],['反推怎么用？','输入目标到手价，反推最小的菜品标价，自动把神券/新客/佣金/配送都算进去。'],['配送费怎么算？','由你设置，美团专送 0-3km 起步 2.5 元 + 价格阶梯；京东外卖京东配送 3 元履约；淘宝闪购相对固定，切换平台自动带出典型值。'],['神券/新客影响？','神券按原价阶梯商家承担、新客券再 +1 元，都会拉高你需要标的最低价，已自动计入。']])}
+        <div class="blk-title">基础设置</div>
+        <div class="row-group"><div class="opt-group">${opt('pIndex',0,'美团外卖','platform')}${opt('pIndex',1,'淘宝闪购','platform')}${opt('pIndex',2,'京东外卖','platform')}</div><div class="opt-group">${opt('mIndex',0,'最高标价','mode')}${opt('mIndex',1,'直接到手价','mode')}</div></div>
+        <div class="blk-title">神券 / 新客券</div>
+        <div class="info-card">
+          <div class="info-head" data-act="toggleSq"><text class="ih-t">计入神券 / 新客券</text><text class="ih-a">${S.actualPrice.sq.on?'计入 ∧':'不计入 ∨'}</text></div>
+          <div class="info-body" ${S.actualPrice.sq.on?'':'style="opacity:.45"'}>
+            <div class="opt-group"><div class="opt ${S.actualPrice.sq.auto?'active':''}" data-act="toggleSqAuto">按原价自动分档</div><div class="opt ${!S.actualPrice.sq.auto?'active':''}" data-act="toggleSqAuto">手动填</div></div>
+            ${S.actualPrice.sq.auto?'':`<div class="picker-row"><div class="field-row"><text class="fr-label">神券商家承担</text><input class="fr-input" type="text" inputmode="decimal" data-group="sq" data-k="manual" value="${S.actualPrice.sq.manual}" /><text class="fr-unit">元</text></div></div>`}
+            <div class="picker-row"><div class="field-row"><text class="fr-label">新客券（商家）</text><input class="fr-input" type="text" inputmode="decimal" data-group="sq" data-k="newCust" value="${S.actualPrice.sq.newCust}" /><text class="fr-unit">元</text></div></div>
+          </div>
+        </div>
+        <div class="blk-title">配送参数</div>
+        <div class="row-group" style="padding:12px 14px 16px">
+          <div class="slider-row"><text class="fr-label">配送距离</text><text class="fr-static" id="apDist">${S.actualPrice.distance} km</text></div>
+          <input type="range" min="0.5" max="10" step="0.5" value="${S.actualPrice.distance}" data-act="distance" />
+        </div>
+        <div class="blk-title">时段</div>
+        <div class="chips-wrap">${times.map((t,i)=>`<div class="time-opt ${S.actualPrice.tIndex===i?'active':''}" data-act="time" data-i="${i}">${t}</div>`).join('')}</div>
+        <div class="blk-title">计算</div>
+        <div class="row-group">
+          ${field('target','目标到手价',S.actualPrice.f.target,'元')}
+          ${field('pack','包装费',S.actualPrice.f.pack,'元')}
+        </div>
+        <div id="outActual"></div>
+        <div class="blk-title">平台抽佣</div>
+        <div class="row-group">
+          <div class="field-row"><text class="fr-label">抽佣模式</text><text class="fr-static">标价 + 包装 - 优惠</text></div>
+          ${field('rate','佣金比例',S.actualPrice.f.rate,'%')}
+          ${field('minFee','每单最低佣金',S.actualPrice.f.minFee,'元')}
+        </div>
+        <div class="blk-title">配送服务费</div>
+        <div class="row-group">
+          <div class="field-row"><text class="fr-label">阶梯价格</text><text class="fr-static">0-3km ¥0.90 封顶 30 元</text></div>
+          <div class="field-row"><text class="fr-label">时段收费</text><text class="fr-static">超出部分夜间加价</text></div>
+          <div class="field-row"><text class="fr-label">距离收费</text><text class="fr-static">每超 1km 加 0.1 元</text></div>
+          ${field('shipFee','配送服务费合计',S.actualPrice.f.shipFee,'元')}
+        </div>
+        ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'保存',c:'save',a:'save'}])}
+        ${disclaimer()}
+      </div>`;
+  },
+
+  newProduct(){
+    const cp = S.newProduct.competitors.map((c,i)=>`
+      <div class="cp-block"><div class="cp-head">竞对${i+1}${i===0?'（必填）':''}</div><div class="cp-row">
+        <input class="cp-input" type="text" inputmode="decimal" placeholder="价格" data-group="competitors" data-i="${i}" data-k="price" value="${c.price}" />
+        <input class="cp-input" type="text" placeholder="如:老王快餐" data-group="competitors" data-i="${i}" data-k="name" value="${c.name}" />
+      </div></div>`).join('');
+    return `
+      <div class="page-wrap">
+        ${infoCard([['新菜该卖多少钱？','输入成本和目标毛利率，一键算出建议售价。'],['怎么知道定价高不高？','输入竞对价格，自动判断你的定价在价格带的什么位置。'],['涨 2 元毛利是多少？','自动算价格敏感度：涨 2 元、降 2 元的毛利率都能看到，幅度还能自己改。']])}
+        <div class="row-group">
+          ${field('cost','单价成本',S.newProduct.f.cost,'元')}
+          ${field('margin','期望毛利率',S.newProduct.f.margin,'%')}
+          ${field('sens','敏感度幅度',S.newProduct.f.sens,'元')}
+        </div>
+        <div class="blk-title">竞对价格（${S.newProduct.competitors.length}/3）</div>
+        <div class="info-card" style="padding:0 14px 14px">
+          <div class="notice warn"><text>⚡</text><text>怎么快速查竞对价？打开外卖平台，搜你这个品类，按销量排序，看前 3 名的同款菜品价格就行。</text></div>
+          <div id="listCp">${cp}</div>
+          ${S.newProduct.competitors.length<3?`<div class="add-cp" data-act="addCp">+ 添加一家竞对</div>`:''}
+        </div>
+        <div id="outNew"></div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  breakeven(){
+    const ci=(k,l,v)=>`<div class="cost-item"><div class="ci-l">${l}</div><input class="ci-i" type="text" inputmode="decimal" data-group="f" data-k="${k}" value="${v}" /></div>`;
+    return `
+      <div class="page-wrap">
+        ${infoCard([['盈亏平衡点是什么？','每天至少需要卖多少钱才能盖回固定成本和变动成本。公式：单日盈亏线 = 单日固定成本 ÷ 毛利率。'],['毛利率怎么算？','毛利率 =（平均单价 - 平均成本）÷ 平均单价。输入每单平均成本和单价后自动计算。'],['单日固定成本怎么算？','（月租金 + 月管理费/物业费 + 月人工工资 + 月水电气暖杂费）÷ 30 天。']])}
+        <div class="blk-title">固定成本（月）</div>
+        <div class="card2"><div class="cost-grid">
+          ${ci('rent','月租金',S.breakeven.f.rent)}${ci('mgmt','管理费/物业费',S.breakeven.f.mgmt)}
+          ${ci('labor','人工工资',S.breakeven.f.labor)}${ci('utility','水电气暖',S.breakeven.f.utility)}
+        </div><div class="daily-fixed"><text>单日固定成本</text><text class="df-v" id="beDaily">¥0/天</text></div></div>
+        <div class="blk-title">单均成本与定价</div>
+        <div class="row-group">
+          ${field('avgCost','平均成本（单）',S.breakeven.f.avgCost,'元')}
+          ${field('avgPrice','平均单价（单）',S.breakeven.f.avgPrice,'元')}
+        </div>
+        <div class="mini-grid">
+          <div class="mini-card"><div class="mc-l">成本率</div><div class="mc-v" id="beCostRate">0%</div></div>
+          <div class="mini-card"><div class="mc-l">毛利率</div><div class="mc-v green" id="beMargin">0%</div></div>
+        </div>
+        <div id="outBreak"></div>
+        ${disclaimer()}
+      </div>`;
+  },
+
+  history(){
+    if(!S.history.list.length){
+      return `<div class="page-wrap"><div class="empty"><text class="empty-ico">🗒️</text><text>还没有计算记录\n去工具箱算一笔吧</text></div></div>`;
+    }
+    const recs = S.history.list.map(r=>`<div class="record"><div class="rec-top"><text class="rec-tool">${r.tool}</text><text class="rec-time">${r.time}</text></div><div class="rec-out">结果：${r.output}</div></div>`).join('');
+    return `<div class="page-wrap">${recs}<button class="btn-clear" data-act="clear">清空全部记录</button></div>`;
+  },
+
+  mine(){
+    const tips=[
+      ['三平台横向比价','同一订单在美团/淘宝闪购/京东外卖实收不同，先用「平台横向对比」算清再决定主投哪个平台。'],
+      ['京东外卖低佣红利','京东配送 6% 佣金 + 3 元履约，比美团 7.6% 低约 1.6 个点；新店可优先布局分摊风险、提升单均利润。'],
+      ['毛利锚定成本法','先用「菜品成本计算器」算清单位成本，再以目标毛利率反推售价，避免拍脑袋定价。'],
+      ['满减力度守恒','满减是双刃剑，力度越大实收越低；用「外卖满减计算器」反推保本档位，不被平台活动绑架。'],
+      ['本地计算不上传','所有数据留在手机本地，不联网、不上传，隐私更安全，也便于随时复核。']
+    ];
+    const cards = tips.map(([t,d])=>`<div class="card"><div class="tip-title">✅ ${t}</div><div class="tip-desc">${d}</div></div>`).join('');
+    return `<div class="page-wrap">
+      <div class="hero"><div class="hero-title">关于本工具</div><div class="hero-sub">复刻竞品功能 · 青绿优化版</div></div>
+      <div class="section-title"><text class="t">相对原版的优化建议</text></div>
+      ${cards}
+      <div class="tip"><text>📮</text><text>如需把某项工具做更深（如带图表、批量算价、导出报表），可在工具箱逐个迭代，或升级企业主体后接入云函数做多端同步。</text></div>
+    </div>`;
+  },
+
+  compare(){
+    const f=S.compare.f, sq=S.compare.sq;
+    return `
+      <div class="page-wrap">
+        <div class="info-card"><div class="info-head"><text class="ih-t">这个功能解决什么</text></div><div class="info-body">
+          <div class="qa"><div class="q">为什么要多平台对比？</div><div class="a">同一笔订单，不同平台抽佣与配送成本不同，商家实收差很多。京东外卖京东配送仅 6% 佣金 + 3 元履约，明显低于美团约 7.6%、淘宝闪购约 5%。一单算清，就知道该把精力放在哪个平台。</div></div>
+        </div></div>
+        <div class="blk-title">订单信息</div>
+        <div class="row-group">
+          ${field('amount','订单金额',f.amount,'元')}
+          ${field('cut','满减（商家承担）',f.cut,'元')}
+          ${field('ship','配送费（商家承担）',f.ship,'元')}
+        </div>
+        <div class="info-card"><div class="info-head" data-act="toggleSq"><text class="ih-t">神券 / 新客（商家承担）</text><text class="ih-a">${sq.on?'计入 ∧':'不计入 ∨'}</text></div>
+          <div class="info-body" ${sq.on?'':'style="opacity:.45"'}>
+            <div class="opt-group"><div class="opt ${sq.auto?'active':''}" data-act="toggleSqAuto">按原价自动分档</div><div class="opt ${!sq.auto?'active':''}" data-act="toggleSqAuto">手动填</div></div>
+            ${sq.auto?'':`<div class="picker-row"><div class="field-row"><text class="fr-label">神券商家承担</text><input class="fr-input" type="text" inputmode="decimal" data-group="sq" data-k="manual" value="${sq.manual}" /><text class="fr-unit">元</text></div></div>`}
+            <div class="qa"><div class="a">美团阶梯神券按原价分档、平台 1:1 补贴；京东外卖早期补贴多由平台承担，商家承担较少（可调）。这里统一按同一笔神券成本横向对比，公平看出扣点差异。</div></div>
+          </div>
+        </div>
+        <div id="outCompare"></div>
+        ${disclaimer()}
+      </div>`;
+  }
+};
+
+/* ---------- calc (mirror .js) ---------- */
+const CALC = {
+  compare(){
+    const f=S.compare.f, amount=num(f.amount), cut=num(f.cut)||0, ship=num(f.ship)||0;
+    if(isNaN(amount)){ $('outCompare').innerHTML=`<div class="result-card"><div class="rc-label">三平台商家实收对比</div><div class="result-hero">—</div></div>`; return; }
+    // 真实费率：美团 7.6%（保底1.06）/ 淘宝闪购 5% / 京东外卖 6%+3 元履约
+    const plats=['美团外卖','淘宝闪购','京东外卖'], rates=[7.6,5,6], ships=[2.5,3,3];
+    const base=amount-cut;
+    const sq=S.compare.sq, sqMer = sq.on ? (sq.auto ? shenquanByOriginal(amount) : (num(sq.manual)||0)) : 0;
+    const rows=plats.map((name,i)=>{ const fee=base*(rates[i]/100); const income=base-fee-ships[i]-sqMer; return { name, rate:rates[i], fee:r2(fee), income:r2(income) }; });
+    const inc=rows.map(r=>r.income);
+    const maxInc=Math.max(...inc);
+    const jd=rows.find(r=>r.name==='京东外卖').income;
+    const others=rows.filter(r=>r.name!=='京东外卖').map(r=>r.income);
+    const bestOther=Math.max(...others);
+    const jdSave=r2(jd-bestOther), jdPositive = jd>bestOther;
+    const notice = jdPositive
+      ? `<div class="notice green" style="margin-top:18px"><text>✅</text><text>同样一单，京东外卖比其他平台最高多收 ¥${jdSave.toFixed(2)}（省下的就是纯利润）。</text></div>`
+      : `<div class="notice warn" style="margin-top:18px"><text>⚠</text><text>本单各平台实收很接近：京东外卖扣点更低（6%）但京东配送 3 元略高于美团专送 2.5 元，单笔基本打平。京东外卖的真正优势在「长期佣金低 1.6 个点 + 平台补贴神券（商家承担少）+ 新店流量」，适合作为第二增长平台布局，而非单笔立刻省钱。</text></div>`;
+    $('outCompare').innerHTML = `
+      <div class="result-card">
+        <div class="rc-label">三平台商家实收对比</div>
+        ${rows.map(r=>`<div class="cmp-row"><div class="cmp-name">${r.name}<text class="cmp-rate">扣点 ${r.rate}%</text></div><div class="cmp-bar-wrap"><div class="cmp-bar" style="width:${maxInc>0?(r.income/maxInc*100):0}%"></div></div><div class="cmp-val">¥${r.income.toFixed(2)}</div></div>`).join('')}
+        ${notice}
+      </div>`;
+  },
+  roi(){
+    const f=S.roi.f, access=num(f.access),conv=num(f.conv),price=num(f.price),rep=num(f.rep),cost=num(f.cost);
+    if([access,conv,price,rep,cost].some(isNaN)){ $('outRoi').innerHTML=`<div class="result-card"><div class="rc-label">真实ROI</div><div class="result-hero">—</div></div>`; return; }
+    const sales=access*(conv/100)*price*rep, roi=cost>0?sales/cost:0, net=sales-cost, ltv=price*rep, orders=Math.round(access*(conv/100));
+    let hint = roi>=3?'真实ROI为'+roi.toFixed(2)+'，表现优秀，可考虑加大投入。' : roi>=1?'真实ROI为'+roi.toFixed(2)+'，表现良好。每投入1元约带来'+roi.toFixed(2)+'元回报，可维持当前投入并持续优化。' : '真实ROI为'+roi.toFixed(2)+'，低于1，说明当前推广亏本，建议先优化转化率或客单价再放量。';
+    $('outRoi').innerHTML = `
+      <div class="result-card"><div class="rc-label">真实ROI</div><div class="result-hero">${roi.toFixed(2)}</div>
+        <div class="result-line"><text class="rl-k">真实新增销售额</text><text class="rl-v">¥${sales.toFixed(1)}</text></div>
+        <div class="result-line"><text class="rl-k">推广投入成本</text><text class="rl-v">¥${cost.toFixed(0)}</text></div>
+        <div class="result-line"><text class="rl-k">净收益</text><text class="rl-v ${net>=0?'plus':'minus'}">${net>=0?'+':''}¥${net.toFixed(1)}</text></div>
+      </div>
+      <div class="mini-grid">
+        <div class="mini-card"><div class="mc-l">单客群LTV</div><div class="mc-v">¥${ltv.toFixed(0)}</div></div>
+        <div class="mini-card"><div class="mc-l">预估订单数</div><div class="mc-v">${orders}单</div></div>
+      </div>
+      <div class="notice warn"><text>💡</text><text>${hint}</text></div>
+      ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'清空',c:'clear',a:'clear'},{t:'保存',c:'save',a:'save'}])}`;
+  },
+
+  commission(){
+    const f=S.commission.f, amount=num(f.amount),rate=num(f.rate),cut=num(f.cut),ship=num(f.ship),subsidy=num(S.commission.adv.subsidy)||0;
+    if([amount,rate,cut,ship].some(isNaN)){ $('outCommission').innerHTML=`<div class="result-card"><div class="rc-label">商家实收</div><div class="result-hero">0</div></div>`; return; }
+    const cutSelf=cut*(1-subsidy/100), base=amount-cutSelf;
+    const minFee=S.commission.platformMinFee[S.commission.pIndex];
+    const fee=Math.max(base*(rate/100),minFee);            // 平台技术服务费（含保底）
+    const b=S.commission.bIndex, shipCost=b===0?ship:(b===1?0:ship/2);
+    const sq=S.commission.sq;
+    let sqMer=0,newCust=0;
+    if(sq.on){ newCust=num(sq.newCust)||0; sqMer = sq.auto ? shenquanByOriginal(amount) : (num(sq.manual)||0); }
+    const income=base-fee-shipCost-sqMer-newCust;
+    const strip=v=>v.toFixed(2).replace(/\.00$/,'');
+    $('outCommission').innerHTML = `
+      <div class="result-card"><div class="rc-label">商家实收</div><div class="result-hero">${income.toFixed(1)}</div>
+        <div class="result-line"><text class="rl-k">订单金额（商品原价）</text><text class="rl-v">¥${amount.toFixed(0)}</text></div>
+        <div class="result-line"><text class="rl-k">满减（商家承担）</text><text class="rl-v minus">-¥${strip(cutSelf)}</text></div>
+        <div class="result-line"><text class="rl-k">扣点基数</text><text class="rl-v">¥${strip(base)}</text></div>
+        <div class="result-line"><text class="rl-k">平台技术服务费（${rate.toFixed(1)}%）</text><text class="rl-v minus">-¥${fee.toFixed(2)}</text></div>
+        <div class="result-line"><text class="rl-k">商家承担配送费</text><text class="rl-v minus">-¥${shipCost.toFixed(1)}</text></div>
+        <div class="result-line"><text class="rl-k">神券商家承担</text><text class="rl-v minus">-¥${sqMer.toFixed(0)}</text></div>
+        <div class="result-line"><text class="rl-k">新客券（商家）</text><text class="rl-v minus">-¥${newCust.toFixed(0)}</text></div>
+        <div class="result-line strong"><text class="rl-k">商家实收</text><text class="rl-v">¥${income.toFixed(1)}</text></div>
+      </div>
+      ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'清空',c:'clear',a:'clear'},{t:'保存',c:'save',a:'save'}])}`;
+  },
+
+  delivery(){
+    const f=S.delivery.f, avgPrice=num(f.avgPrice)||0, shipSelf=num(f.shipSelf)||0;
+    const cps=S.delivery.competitors, mins=cps.map(c=>num(c.min)).filter(n=>!isNaN(n)), ships=cps.map(c=>num(c.ship)).filter(n=>!isNaN(n));
+    const avgMin=mins.length?mins.reduce((a,b)=>a+b,0)/mins.length:0, avgShip=ships.length?ships.reduce((a,b)=>a+b,0)/ships.length:0;
+    const balance=Math.round(avgMin);
+    const tiers=[
+      {name:'冲量档',min:Math.round(balance*0.9),ship:shipSelf,price:(avgPrice*0.95).toFixed(2)},
+      {name:'平衡档',min:balance,ship:shipSelf,price:avgPrice.toFixed(2)},
+      {name:'利润档',min:Math.round(balance*1.15),ship:shipSelf,price:(avgPrice*1.05).toFixed(2)}
+    ];
+    const rows=tiers.map(t=>`<div class="tbl-row"><div class="tc hl">${t.name}</div><div class="tc">¥${t.min}</div><div class="tc">¥${t.ship}</div><div class="tc">${t.price}</div></div>`).join('');
+    $('outDelivery').innerHTML = `
+      <div class="result-card">
+        <div class="result-line"><text class="rl-k">竞对平均起送价</text><text class="rl-v">${avgMin.toFixed(0)}元</text></div>
+        <div class="result-line"><text class="rl-k">竞对平均配送费</text><text class="rl-v">¥${avgShip.toFixed(0)}</text></div>
+      </div>
+      <div class="blk-title">三档建议对比</div>
+      <div class="tbl"><div class="tbl-head"><div class="tc">档位</div><div class="tc">起送价</div><div class="tc">配送费</div><div class="tc">预估客单</div></div>${rows}</div>
+      <div class="notice"><text>💡</text><text>冲量档：单多但利润薄；平衡档：推荐选择；利润档：单少但利润率高。</text></div>
+      <div class="notice green"><text>✅</text><text>商圈客单 ¥${f.avgPrice}，建议 2-3 元配送费。</text></div>
+      ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'清空',c:'clear',a:'clear'},{t:'保存',c:'save',a:'save'}])}`;
+  },
+
+  fullReduction(){
+    const f=S.fullReduction.f, target=num(f.target), rate=num(f.rate), minPrice=num(f.minPrice)||0;
+    if([target,rate].some(isNaN)||rate>=100){ $('outFull').innerHTML=`<div class="result-card"><div class="rc-label">建议菜品定价</div><div class="result-hero">0.00</div></div>`; return; }
+    const pay1=target/(1-rate/100), fee=pay1*(rate/100), income1=pay1-fee, price=pay1-minPrice*0.038;
+    const full1=r2(pay1*1.05), cut1=r2(full1-pay1), pay2=r2(pay1*1.5), full2=r2(full1*1.65), cut2=r2(full2-pay2), income2=r2(pay2*(1-rate/100));
+    const tiers=[
+      {name:'第1档',rule:`满${full1}减${cut1}`,pay:pay1.toFixed(1),income:income1.toFixed(0)},
+      {name:'第2档',rule:`满${full2}减${cut2}`,pay:pay2.toFixed(2).replace(/0$/,'') ,income:income2.toFixed(0)}
+    ];
+    const rows=tiers.map(t=>`<div class="tbl-row"><div class="tc hl">${t.name}</div><div class="tc">${t.rule}</div><div class="tc">${t.pay}</div><div class="tc">${t.income}</div></div>`).join('');
+    $('outFull').innerHTML=`
+      <div class="result-card"><div class="rc-label">建议菜品定价</div><div class="result-hero">${price.toFixed(2)}</div>
+        <div class="result-line"><text class="rl-k">用户实付（反推）</text><text class="rl-v">¥${pay1.toFixed(1)}</text></div>
+        <div class="result-line"><text class="rl-k">平台扣点</text><text class="rl-v minus">¥${fee.toFixed(1)}</text></div>
+        <div class="result-line strong"><text class="rl-k">商家实收</text><text class="rl-v">¥${income1.toFixed(0)}</text></div>
+      </div>
+      <div class="blk-title">满减档位方案</div>
+      <div class="tbl"><div class="tbl-head"><div class="tc">档位</div><div class="tc">满减规则</div><div class="tc">用户实付</div><div class="tc">商家实收</div></div>${rows}</div>
+      <div class="notice green"><text>✅</text><text>第 1、2 档 基础方案（免费）。</text></div>
+      ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'清空',c:'clear',a:'clear'},{t:'保存',c:'save',a:'save'}])}`;
+  },
+
+  actualPrice(){
+    const f=S.actualPrice.f, target=num(f.target), pack=num(f.pack)||0, shipFee=num(f.shipFee)||0, rate=num(f.rate), minFee=num(f.minFee)||0;
+    if([target,rate].some(isNaN)||rate>=100){ $('outActual').innerHTML=`<div class="result-card"><div class="rc-label">推荐菜品标价</div><div class="result-hero">0.00</div></div>`; return; }
+    const sq=S.actualPrice.sq;
+    let sqMer=0,newCust=0;
+    if(sq.on){
+      newCust=num(sq.newCust)||0;
+      const orig=target+pack+shipFee;                       // 近似原价（标价口径），用于神券分档
+      sqMer = sq.auto ? shenquanByOriginal(orig) : (num(sq.manual)||0);
+    }
+    const base=(target+shipFee+sqMer+newCust)/(1-rate/100), price=base-pack;
+    const fee=Math.max(base*(rate/100),minFee), real=base-fee-shipFee-sqMer-newCust;
+    $('outActual').innerHTML=`
+      <div class="result-card"><div class="rc-label">推荐菜品标价</div><div class="result-hero">${price.toFixed(2)}</div>
+        <div class="result-sub">平台佣金 ${fee.toFixed(2)} 元 · 配送服务费 ${shipFee.toFixed(2)} 元 · 神券/新客 ${sqMer.toFixed(0)}/${newCust.toFixed(0)} 元</div>
+        <div class="result-line"><text class="rl-k">标价 + 包装</text><text class="rl-v">¥${base.toFixed(2)}</text></div>
+        <div class="result-line"><text class="rl-k">平台佣金</text><text class="rl-v minus">-¥${fee.toFixed(2)}</text></div>
+        <div class="result-line"><text class="rl-k">配送服务费</text><text class="rl-v minus">-¥${shipFee.toFixed(2)}</text></div>
+        <div class="result-line"><text class="rl-k">神券商家承担</text><text class="rl-v minus">-¥${sqMer.toFixed(0)}</text></div>
+        <div class="result-line"><text class="rl-k">新客券（商家）</text><text class="rl-v minus">-¥${newCust.toFixed(0)}</text></div>
+        <div class="result-line strong"><text class="rl-k">用户到手</text><text class="rl-v">¥${real.toFixed(2)}</text></div>
+      </div>`;
+  },
+
+  newProduct(){
+    const f=S.newProduct.f, cost=num(f.cost), margin=num(f.margin), sens=num(f.sens)||0;
+    if([cost,margin].some(isNaN)||margin>=100){ $('outNew').innerHTML=`<div class="result-card"><div class="rc-label">建议定价</div><div class="result-hero">0.00</div></div>`; return; }
+    const price=cost/(1-margin/100), profit=price-cost, up=price+sens, down=price-sens;
+    const upRate=(up-cost)/up*100, downRate=(down-cost)/down*100;
+    const cps=S.newProduct.competitors.map(c=>num(c.price)).filter(n=>!isNaN(n));
+    let bandMin=0,bandMax=0,youPos=50,bandTip='';
+    if(cps.length){
+      bandMin=Math.min.apply(null,cps); bandMax=Math.max.apply(null,cps);
+      const span=bandMax-bandMin; youPos=span>0?Math.max(4,Math.min(96,(price-bandMin)/span*100)):50;
+      if(price>bandMax) bandTip='比最贵的竞对还高 ¥'+(price-bandMax).toFixed(2)+' 元，需突出差异化价值';
+      else if(price<bandMin) bandTip='比最低的竞对还低 ¥'+(bandMin-price).toFixed(2)+' 元，有明显价格优势';
+      else bandTip='处于竞对价格带内，性价比适中';
+    }
+    $('outNew').innerHTML=`
+      <div class="result-card"><div class="rc-label">建议定价</div><div class="result-hero">${price.toFixed(2)}</div>
+        <div class="result-sub">毛利额 ¥${profit.toFixed(2)}（${margin.toFixed(0)}%）</div>
+        <div class="result-line"><text class="rl-k">竞对价格带</text><text class="rl-v">最低 ¥${bandMin.toFixed(0)} · 最高 ¥${bandMax.toFixed(0)}</text></div>
+        <div class="band"><div class="band-track"><div class="band-you" style="left:${youPos}%"></div></div><div class="band-you-label">你 ¥${price.toFixed(2)}</div></div>
+      </div>
+      ${bandTip?`<div class="notice warn"><text>💡</text><text>${bandTip}</text></div>`:''}
+      <div class="blk-title">价格敏感度（±${f.sens}元）</div>
+      <div class="mini-grid">
+        <div class="mini-card"><div class="mc-l">涨价 ${f.sens} 元</div><div class="mc-v green">¥${up.toFixed(2)}</div><div class="mc-sub">毛利率 ${upRate.toFixed(1)}%</div></div>
+        <div class="mini-card"><div class="mc-l">降价 ${f.sens} 元</div><div class="mc-v red">¥${down.toFixed(2)}</div><div class="mc-sub">毛利率 ${downRate.toFixed(0)}%</div></div>
+      </div>
+      ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'清空',c:'clear',a:'clear'},{t:'保存',c:'save',a:'save'}])}`;
+  },
+
+  breakeven(){
+    const f=S.breakeven.f, rent=num(f.rent)||0, mgmt=num(f.mgmt)||0, labor=num(f.labor)||0, utility=num(f.utility)||0;
+    const avgCost=num(f.avgCost), avgPrice=num(f.avgPrice), total=rent+mgmt+labor+utility, dailyFixed=total/30;
+    $('beDaily').textContent='¥'+dailyFixed.toFixed(0)+'/天';
+    if([avgCost,avgPrice].some(isNaN)||avgPrice<=0){ $('beCostRate').textContent='0%'; $('beMargin').textContent='0%'; $('outBreak').innerHTML=''; return; }
+    const costRate=avgCost/avgPrice*100, marginRate=(avgPrice-avgCost)/avgPrice*100;
+    const breakeven=marginRate>0?dailyFixed/(marginRate/100):0, mBreakeven=breakeven*30;
+    $('beCostRate').textContent=costRate.toFixed(1)+'%'; $('beMargin').textContent=marginRate.toFixed(1)+'%';
+    const mk=(name,ratio)=>{ const day=breakeven*ratio, dp=day*(marginRate/100)-dailyFixed; return {name,day:day.toFixed(2),dayProfit:(dp>=0?'':'-')+'¥'+Math.abs(dp).toFixed(0),monthProfit:(dp>=0?'':'-')+'¥'+Math.abs(dp*30).toFixed(0),cls:dp<0?'bad':(dp>0?'good':'hl')}; };
+    const tiers=[mk('亏损区',0.8),mk('平衡点',1),mk('盈利区',1.2)]; tiers[1].dayProfit='¥0'; tiers[1].monthProfit='¥0';
+    const rows=tiers.map(t=>`<div class="tbl-row"><div class="tc ${t.cls}">${t.name}</div><div class="tc">¥${t.day}</div><div class="tc ${t.cls}">${t.dayProfit}</div><div class="tc ${t.cls}">${t.monthProfit}</div></div>`).join('');
+    $('outBreak').innerHTML=`
+      <div class="result-card"><div class="rc-label">单日盈亏平衡点</div><div class="result-hero">¥${breakeven.toFixed(1)}</div>
+        <div class="result-sub">每天至少要卖这么多钱才不亏</div>
+        <div class="result-line"><text class="rl-k">盈亏平衡营业额（月）</text><text class="rl-v">¥${mBreakeven.toFixed(0)}</text></div>
+        <div class="result-line"><text class="rl-k">单日固定成本</text><text class="rl-v">¥${dailyFixed.toFixed(0)}</text></div>
+      </div>
+      <div class="blk-title">三档营业额对照</div>
+      <div class="tbl"><div class="tbl-head"><div class="tc">档位</div><div class="tc">日营业额</div><div class="tc">日利润</div><div class="tc">月利润</div></div>${rows}</div>
+      <div class="notice warn"><text>💡</text><text>公式：单日盈亏线 = 单日固定成本 ÷ 毛利率。毛利率越高，盈亏线越低，越容易盈利。</text></div>
+      ${footerBtns([{t:'分享',c:'share',a:'share'},{t:'清空',c:'clear',a:'clear'},{t:'保存',c:'save',a:'save'}])}`;
+  },
+
+  cost(){
+    const items=S.cost.items; let total=0;
+    items.forEach(it=>{ total += (num(it.qty)||0)*(num(it.price)||0); });
+    $('ctTotal').textContent='¥'+total.toFixed(2);
+    const margin=num(S.cost.margin), price=(!isNaN(margin)&&margin<100&&total>0)?total/(1-margin/100):0;
+    $('outCost').innerHTML=`
+      <div class="result-card"><div class="rc-label">建议售价</div><div class="result-hero">${price.toFixed(2)}</div>
+        <div class="result-sub">单份毛利 ¥${(price-total).toFixed(2)}</div>
+        <div class="result-line"><text class="rl-k">单份成本</text><text class="rl-v">¥${total.toFixed(2)}</text></div>
+      </div>`;
+  }
+};
+
+/* ---------- mount / router ---------- */
+let stack=['index'];
+function mount(page){
+  const isTab = TABS.some(t=>t.page===page);
+  $('content').innerHTML = RENDER[page]();
+  $('navTitle').textContent = TITLES[page];
+  $('backBtn').classList.toggle('show', stack.length>1);
+  // tabbar
+  $('tabbar').innerHTML = TABS.map(t=>`<div class="tab ${t.page===page?'active':''}" data-act="tab" data-page="${t.page}">${ICONS[t.icon]}<span>${t.text}</span></div>`).join('');
+  if(CALC[page]) CALC[page]();
+}
+function goto(page, isTab){
+  if(isTab) stack=[page];
+  else stack.push(page);
+  mount(page);
+}
+
+/* ---------- events (delegation) ---------- */
+$('content').addEventListener('input', e=>{
+  const el=e.target; const g=el.dataset.group, k=el.dataset.k, i=el.dataset.i;
+  if(!g) return;
+  const page = stack[stack.length-1];
+  if(g==='margin'){ S.cost.margin = el.value; if(page==='cost') CALC.cost(); return; }
+  if(i!==undefined){
+    if(g==='competitors') S[page].competitors[i][k]=el.value;
+    else if(g==='items'){ S.cost.items[i][k]=el.value;
+      if((k==='qty'||k==='price') && el.closest('.bom-row')){
+        const it=S.cost.items[i];
+        el.closest('.bom-row').querySelector('.bom-cost').textContent='¥'+((num(it.qty)||0)*(num(it.price)||0)).toFixed(2);
+      }
+    }
+  } else {
+    S[page][g][k]=el.value;
+  }
+  if(CALC[page]) CALC[page]();
+});
+$('content').addEventListener('change', e=>{
+  const el=e.target; const g=el.dataset.group;
+  if(g==='pIndex'||g==='bIndex'){
+    const page=stack[stack.length-1]; S[page][g]=parseInt(el.value,10);
+    // 切换平台时同步带出该平台真实扣点率与配送费（美团 7.6%+2.5 / 淘宝闪购 5%+3 / 京东外卖 6%+3）
+    if(page==='commission' && g==='pIndex'){
+      const i=S.commission.pIndex;
+      S.commission.f.rate=String(S.commission.platformRates[i]);
+      S.commission.f.ship=String(S.commission.platformShip[i]);
+    }
+    CALC[page]();
+  }
+});
+$('content').addEventListener('click', e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const act=t.dataset.act, page=stack[stack.length-1];
+  if(act==='go') goto(t.dataset.page,false);
+  else if(act==='tab') goto(t.dataset.page,true);
+  else if(act==='back'){ stack.pop(); mount(stack[stack.length-1]); }
+  else if(act==='toggleInfo'){ const b=$('infoBody'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; $('infoA').textContent=open?'展开 ∨':'收起 ∧'; }
+  else if(act==='toggleAdv'){ const b=$('advBody'); const open=b.style.display!=='none'; b.style.display=open?'none':'block'; $('advA').textContent=open?'展开 ∨':'收起 ∧'; }
+  else if(act==='platform'){ if(page==='fullReduction'){ const i=+t.dataset.i; S.fullReduction.pIndex=i; S.fullReduction.f.rate=String([7.6,5,6][i]); } else if(page==='actualPrice'){ const i=+t.dataset.i; S.actualPrice.pIndex=i; S.actualPrice.f.rate=String([7.6,5,6][i]); S.actualPrice.f.minFee=String([1.06,1,0][i]); S.actualPrice.f.shipFee=String([2.5,3,3][i]); } CALC[page](); mount(page); }
+  else if(act==='toggleSq'){ S[page].sq.on=!S[page].sq.on; mount(page); }
+  else if(act==='toggleSqAuto'){ S[page].sq.auto=!S[page].sq.auto; mount(page); }
+  else if(act==='mode'){ S.actualPrice.mIndex=+t.dataset.i; mount(page); }
+  else if(act==='time'){ S.actualPrice.tIndex=+t.dataset.i; mount(page); }
+  else if(act==='distance'){ /* handled in input range change below */ }
+  else if(act==='addCp'){ const arr=S[page].competitors; if(arr.length<3){ arr.push(page==='newProduct'?{price:'',name:''}:{min:'',ship:''}); mount(page); } }
+  else if(act==='delItem'){ S.cost.items.splice(+t.dataset.i,1); mount('cost'); }
+  else if(act==='addItem'){ S.cost.items.push({name:'',qty:'',price:''}); mount('cost'); }
+  else if(act==='clear'){ if(page==='history'){ S.history.list=[]; mount('history'); } else { clearPage(page); } }
+  else if(act==='save'){ saveRecord(page); toast('已保存到历史'); }
+  else if(act==='share'){ toast('分享功能需在微信中使用'); }
+});
+$('content').addEventListener('input', e=>{
+  if(e.target.dataset.act==='distance'){ S.actualPrice.distance=parseFloat(e.target.value); $('apDist').textContent=S.actualPrice.distance+' km'; }
+});
+
+function clearPage(page){
+  const defs={
+    roi:{f:{access:'',conv:'',price:'',rep:'',cost:''}},
+    commission:{f:{amount:'',rate:'',cut:'',ship:''},adv:{subsidy:'0'},sq:{on:true,auto:true,manual:'0',newCust:'1'}},
+    delivery:{f:{avgPrice:'',cost:'',rate:'',cutRatio:'',shipSelf:''},competitors:[{min:'',ship:''}]},
+    fullReduction:{f:{target:'',rate:'',cost:'',minPrice:''}},
+    actualPrice:{f:{target:'',pack:'',shipFee:'',rate:'',minFee:''},sq:{on:true,auto:true,manual:'0',newCust:'1'}},
+    newProduct:{f:{cost:'',margin:'',sens:''},competitors:[{price:'',name:''}]},
+    breakeven:{f:{rent:'',mgmt:'',labor:'',utility:'',avgCost:'',avgPrice:''}},
+    cost:{margin:'65',items:[]}
+  };
+  if(defs[page]){ Object.assign(S[page], JSON.parse(JSON.stringify(defs[page]))); if(page==='cost') S.cost.items=[{name:'',qty:'',price:''}]; }
+  mount(page); toast('已清空');
+}
+function saveRecord(page){
+  const out = $('content').querySelector('.result-hero');
+  const label = TITLES[page]||'计算器';
+  S.history.list.unshift({tool:label, time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'), output:(out?out.textContent:'—')});
+  if(S.history.list.length>20) S.history.list.pop();
+}
+
+/* ---------- boot ---------- */
+// 导航栏返回：backBtn 与 tabbar 都在 #content 之外，需用独立委托捕获
+$('backBtn').addEventListener('click', ()=>{ if(stack.length>1){ stack.pop(); mount(stack[stack.length-1]); } });
+$('tabbar').addEventListener('click', e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  if(t.dataset.act==='tab') goto(t.dataset.page,true);
+});
+mount('index');
+</script>
+</body>
+</html>
